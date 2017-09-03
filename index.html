@@ -2,7 +2,221 @@
                         
                     
 
-<h2 id="jsplumbjs使用总结">JsPlumb.js使用总结</h2>
+
+
+<h1 id="jsplumbjs使用总结">JsPlumb.js使用总结</h1>
 
 <p> <br>
-    jsPlumb是一个强大的JavaScript连线库，提供html元素的拖放、连线等功能，可绘制不同类型、样式的连线，适用于开发web页面的图表、建模工具等，</p></div></body></html>
+        jsPlumb是一个强大的JavaScript连线库，提供html元素的拖放、连线等功能，可绘制不同类型、样式的连线，适用于开发web页面的图表、建模工具等。除了Dom对象，同时支持jquery对象，也可以与jquery-ui结合使用。我没有使用jquery-ui的方法来实现拖放效果，jsPlumb本身也提供相关方法，参数与jquery-ui非常类似。</p>
+
+<div><div class="toc"><div class="toc">
+<ul>
+<li><a href="#jsplumbjs使用总结">JsPlumb.js使用总结</a><ul>
+<li><a href="#官网">官网</a></li>
+<li><a href="#开始使用">开始使用</a></li>
+<li><a href="#几个概念">几个概念</a><ul>
+<li><ul>
+<li><a href="#anchor">Anchor</a></li>
+<li><a href="#endpoint">Endpoint</a></li>
+<li><a href="#connector">Connector</a></li>
+<li><a href="#overlay">Overlay</a></li>
+<li><a href="#group">Group</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+</div>
+
+
+
+<h2 id="官网">官网</h2>
+
+<blockquote>
+  <p>个人觉得直接看英文官方文档比较难读，采用的学习曲线是，先搜一两篇中文资料看个大概，并结合官方文档<a href="https://jsplumbtoolkit.com/community/doc/home.html" target="_blank">https://jsplumbtoolkit.com/community/doc/home.html</a>自己理解，毕竟有的翻译的会略生硬；然后看gitHub上的例子，提供了不同类型连线的demo，碰到具体的方法、参数设置等不清楚可到官网api中查看；最后可以试着开始在你的项目中使用了，这时候随时查官方api，因为你肯定需要它。 <br>
+  tips： 网上的一些资料由于年代较早，我们的jsPlumb一直保持着版本更新，若引用的新版本js，有的方法已经弃用，在api中都能找到替代方法，或者到其更新日志（<a href="https://jsplumbtoolkit.com/community/doc/changelog.html" target="_blank">https://jsplumbtoolkit.com/community/doc/changelog.html</a> ）中去查找关键字。</p>
+</blockquote>
+
+<p>官方网站：<a href="https://jsplumbtoolkit.com/" target="_blank">https://jsplumbtoolkit.com/</a>  <br>
+gitHub项目地址：<a href="https://github.com/jsplumb/jsPlumb" target="_blank">https://github.com/jsplumb/jsPlumb</a> </p>
+
+<p>网络资料： <br>
+文档翻译类： <br>
+<a href="https://segmentfault.com/a/1190000003826470" target="_blank">https://segmentfault.com/a/1190000003826470</a> <br>
+<a href="http://www.cnblogs.com/leomYili/p/6346526.html" target="_blank">http://www.cnblogs.com/leomYili/p/6346526.html</a>  <br>
+实用总结类：</p>
+
+<h2 id="开始使用">开始使用</h2>
+
+<p>jsPlumb官网提供社区版和toolkit版（付费），下载社区版js并在页面中引入。jsPlumb没有额外的依赖。</p>
+
+<pre class="prettyprint hljs-dark"><code class="hljs xml"><div class="hljs-line"><span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">src</span>=<span class="hljs-string">"jsplumb.js "</span>&gt;</span><span class="undefined"></span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+</div></code></pre>
+
+<p>jsPlumb必须等到DOM加载完成之后使用：</p>
+
+<pre class="prettyprint hljs-dark"><code class="hljs actionscript"><div class="hljs-line">jsPlumb.bind(<span class="hljs-string">"ready"</span>,<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span></span>{
+</div><div class="hljs-line">    ...
+</div><div class="hljs-line">    <span class="hljs-comment">// jsPlumb相关初始化代码</span>
+</div><div class="hljs-line">    ...
+</div><div class="hljs-line">});
+</div><div class="hljs-line"><span class="hljs-comment">//or</span>
+</div><div class="hljs-line">...
+</div><div class="hljs-line">jsPlumb.ready(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span></span>{  <span class="hljs-comment">//简写</span>
+</div><div class="hljs-line">    ...
+</div><div class="hljs-line">    <span class="hljs-comment">// jsPlumb相关初始化代码</span>
+</div><div class="hljs-line">    ...
+</div><div class="hljs-line">});
+</div></code></pre>
+
+<p>jsPlumb默认注册在浏览器的window对象中，为整个页面提供了一个静态实例(jsPlumb)可直接使用，你也可以用getInstance方法创建一个单独的实例。即可以直接使用全局对象[jsPlumb]或实例对象[myInstance]来调用jsPlumb的方法：</p>
+
+<pre class="prettyprint hljs-dark"><code class="hljs ebnf"><div class="hljs-line"><span class="hljs-attribute">var myInstance</span> = jsPlumb.getInstance();
+</div></code></pre>
+
+<p>设置默认配置（主要是点、线样式），两种方式，通过importDefaults方法或者getInstance中传参。importDefaults为全局设置，可以在实例化时用getInstance重新定义，推荐使用单独的实例：</p>
+
+<pre class="prettyprint hljs-dark"><code class="hljs groovy"><div class="hljs-line">myInstance.importDefaults({  <span class="hljs-comment">//或jsPlumb.importDefaults();</span>
+</div><div class="hljs-line">    <span class="hljs-string">Connector :</span> [ <span class="hljs-string">"Bezier"</span>, { <span class="hljs-string">curviness:</span> <span class="hljs-number">150</span> } ],
+</div><div class="hljs-line">    <span class="hljs-string">Anchors :</span> [ <span class="hljs-string">"TopCenter"</span>, <span class="hljs-string">"BottomCenter"</span> ],
+</div><div class="hljs-line">    ...
+</div><div class="hljs-line">});
+</div><div class="hljs-line"><span class="hljs-comment">//or</span>
+</div><div class="hljs-line">var myInstance = jsPlumb.getInstance({
+</div><div class="hljs-line">    <span class="hljs-string">Connector :</span> [ <span class="hljs-string">"Bezier"</span>, { <span class="hljs-string">curviness:</span> <span class="hljs-number">150</span> } ],
+</div><div class="hljs-line">    <span class="hljs-string">Anchors :</span> [ <span class="hljs-string">"TopCenter"</span>, <span class="hljs-string">"BottomCenter"</span> ],
+</div><div class="hljs-line">    ...
+</div><div class="hljs-line">});
+</div></code></pre>
+
+<p>关于默认配置的详细解释如下。根据实际需要，我们一般可能只用到一部分参数。官网参考：<a href="https://jsplumbtoolkit.com/community/doc/defaults.html" target="_blank">https://jsplumbtoolkit.com/community/doc/defaults.html</a> 。</p>
+
+<pre class="prettyprint hljs-dark"><code class="hljs groovy"><div class="hljs-line">{
+</div><div class="hljs-line"><span class="hljs-symbol">    Anchor:</span> <span class="hljs-string">"BottomCenter"</span>, <span class="hljs-comment">//锚点位置，如left，top，bottom等；对任何没有声明描点的Endpoint设置锚点，用于source及诶单或target节点</span>
+</div><div class="hljs-line"><span class="hljs-symbol">    Anchors:</span> [ <span class="hljs-literal">null</span>, <span class="hljs-literal">null</span> ], <span class="hljs-comment">//连线的source和target Anchor</span>
+</div><div class="hljs-line"><span class="hljs-symbol">    ConnectionsDetachable:</span> <span class="hljs-literal">true</span>, <span class="hljs-comment">//连线是否可用鼠标分离</span>
+</div><div class="hljs-line"><span class="hljs-symbol">    ConnectionOverlays:</span> [  <span class="hljs-comment">//连线的叠加组件，如箭头、标签</span>
+</div><div class="hljs-line">        [<span class="hljs-string">"Arrow"</span>, {  <span class="hljs-comment">//箭头参数设置</span>
+</div><div class="hljs-line"><span class="hljs-symbol">            location:</span> <span class="hljs-number">1</span>,
+</div><div class="hljs-line"><span class="hljs-symbol">            visible:</span><span class="hljs-literal">true</span>,
+</div><div class="hljs-line"><span class="hljs-symbol">            width:</span><span class="hljs-number">11</span>,
+</div><div class="hljs-line"><span class="hljs-symbol">            length:</span><span class="hljs-number">11</span>,
+</div><div class="hljs-line"><span class="hljs-symbol">            id:</span><span class="hljs-string">"ARROW"</span>,
+</div><div class="hljs-line"><span class="hljs-symbol">            events:</span>{
+</div><div class="hljs-line"><span class="hljs-symbol">                click:</span>function() { }
+</div><div class="hljs-line">            }
+</div><div class="hljs-line">        } ],
+</div><div class="hljs-line">        [ <span class="hljs-string">"Label"</span>, {  <span class="hljs-comment">//标签参数设置</span>
+</div><div class="hljs-line"><span class="hljs-symbol">            location:</span> <span class="hljs-number">0.1</span>,
+</div><div class="hljs-line"><span class="hljs-symbol">            id:</span> <span class="hljs-string">"label"</span>,
+</div><div class="hljs-line"><span class="hljs-symbol">            cssClass:</span> <span class="hljs-string">"aLabel"</span>, <span class="hljs-comment">//hover时label的样式名</span>
+</div><div class="hljs-line"><span class="hljs-symbol">            events:</span>{
+</div><div class="hljs-line"><span class="hljs-symbol">                tap:</span>function() { }
+</div><div class="hljs-line">            },
+</div><div class="hljs-line"><span class="hljs-symbol">            visible:</span> <span class="hljs-literal">true</span>
+</div><div class="hljs-line">        }]
+</div><div class="hljs-line">    ],
+</div><div class="hljs-line"><span class="hljs-symbol">    Connector:</span> <span class="hljs-string">"Bezier"</span>, <span class="hljs-comment">//连线的类型，流程图(Flowchart)、贝塞尔曲线等</span>
+</div><div class="hljs-line"><span class="hljs-symbol">    Container:</span> <span class="hljs-literal">null</span>, <span class="hljs-comment">//父级元素id；假如页面元素所在上层不同，最外层父级一定要设置</span>
+</div><div class="hljs-line"><span class="hljs-symbol">    DoNotThrowErrors:</span> <span class="hljs-literal">false</span>, <span class="hljs-comment">//如果请求不存在的Anchor、Endpoint或Connector，是否抛异常</span>
+</div><div class="hljs-line"><span class="hljs-symbol">    DragOptions:</span> {<span class="hljs-string">cursor:</span> <span class="hljs-string">'pointer'</span>, <span class="hljs-string">zIndex:</span> <span class="hljs-number">2000</span>}, <span class="hljs-comment">//通过jsPlumb.draggable拖拽元素时的默认参数设置</span>
+</div><div class="hljs-line"><span class="hljs-symbol">    DropOptions:</span> { }, <span class="hljs-comment">//target Endpoint放置时的默认参数设置</span>
+</div><div class="hljs-line"><span class="hljs-symbol">    Endpoint:</span> <span class="hljs-string">"Dot"</span>, <span class="hljs-comment">//端点（锚点）的样式声明</span>
+</div><div class="hljs-line"><span class="hljs-symbol">    Endpoints:</span> [ <span class="hljs-literal">null</span>, <span class="hljs-literal">null</span> ], <span class="hljs-comment">//用jsPlumb.connect创建连接时，source端点和target端点的样式设置</span>
+</div><div class="hljs-line"><span class="hljs-symbol">    EndpointOverlays:</span> [ ], <span class="hljs-comment">//端点的叠加物</span>
+</div><div class="hljs-line"><span class="hljs-symbol">    EndpointStyle:</span> { <span class="hljs-string">fill :</span> <span class="hljs-string">"#456"</span> }, <span class="hljs-comment">//端点的默认样式</span>
+</div><div class="hljs-line"><span class="hljs-symbol">    EndpointStyles:</span> [ <span class="hljs-literal">null</span>, <span class="hljs-literal">null</span> ], <span class="hljs-comment">//连线的source和target端点的样式</span>
+</div><div class="hljs-line"><span class="hljs-symbol">    EndpointHoverStyle:</span> { <span class="hljs-string">fill:</span> <span class="hljs-string">"#ec9f2e"</span> }, <span class="hljs-comment">//端点hover时的样式</span>
+</div><div class="hljs-line"><span class="hljs-symbol">    EndpointHoverStyles:</span> [ <span class="hljs-literal">null</span>, <span class="hljs-literal">null</span> ], <span class="hljs-comment">//连线的source和target端点hover时的样式</span>
+</div><div class="hljs-line"><span class="hljs-symbol">    HoverPaintStyle:</span> {<span class="hljs-string">stroke:</span> <span class="hljs-string">"#ec9f2e"</span> }, <span class="hljs-comment">//连线hover时的样式</span>
+</div><div class="hljs-line"><span class="hljs-symbol">    LabelStyle:</span> { <span class="hljs-string">color:</span> <span class="hljs-string">"black"</span> }, <span class="hljs-comment">//标签的默认样式，用css写法。</span>
+</div><div class="hljs-line"><span class="hljs-symbol">    LogEnabled:</span> <span class="hljs-literal">false</span>, <span class="hljs-comment">//是否开启jsPlumb内部日志</span>
+</div><div class="hljs-line"><span class="hljs-symbol">    Overlays:</span> [ ], <span class="hljs-comment">//连线和端点的叠加物</span>
+</div><div class="hljs-line"><span class="hljs-symbol">    MaxConnections:</span> <span class="hljs-number">1</span>, <span class="hljs-comment">//端点支持的最大连接数</span>
+</div><div class="hljs-line"><span class="hljs-symbol">    PaintStyle:</span> { <span class="hljs-string">lineWidth :</span> <span class="hljs-number">8</span>, <span class="hljs-string">stroke :</span> <span class="hljs-string">"#456"</span> }, <span class="hljs-comment">//连线样式</span>
+</div><div class="hljs-line"><span class="hljs-symbol">    ReattachConnections:</span> <span class="hljs-literal">false</span>, <span class="hljs-comment">//是否重新连接使用鼠标分离的线?</span>
+</div><div class="hljs-line"><span class="hljs-symbol">    RenderMode:</span> <span class="hljs-string">"svg"</span>, <span class="hljs-comment">//默认渲染模式</span>
+</div><div class="hljs-line"><span class="hljs-symbol">    Scope:</span> <span class="hljs-string">"jsPlumb_DefaultScope"</span> <span class="hljs-comment">//范围，具有相同scope的点才可连接？</span>
+</div><div class="hljs-line">}
+</div></code></pre>
+
+<p>点或线的一些参数设置，在上述全局默认配置中也并不是必须，因为在使用connect方法创建连接和addEndpoint 方法添加锚点时都可以对其进行重写。</p>
+
+<p>下面看个实际的例子：</p>
+
+<h2 id="几个概念">几个概念</h2>
+
+<p>详见文档：<a href="https://jsplumbtoolkit.com/community/doc/basic-concepts.html" target="_blank">https://jsplumbtoolkit.com/community/doc/basic-concepts.html</a> </p>
+
+
+
+<h4 id="anchor">Anchor</h4>
+
+<p>锚点位置，EndPoint所处的位置。 <br>
+锚点位置可以是固定的(Static)、动态(Dynamic)、周边锚(Perimeter anchors)、连续锚(Continuous anchors)四种类型。</p>
+
+<h4 id="endpoint">Endpoint</h4>
+
+<p>端点，连线末端可见的端点。 <br>
+创建Endpoint可以通过多种方式：</p>
+
+<ol start="1"><li rel="1">通过jsPlumb.connect(…)创建连接时动态创建，传入参数为source和target元素id或DOM元素；        </li>
+</ol>
+
+<pre class="prettyprint hljs-dark"><code class="hljs groovy"><div class="hljs-line">instance.connect({<span class="hljs-string">uuids:</span> [<span class="hljs-string">"sourceId"</span>, <span class="hljs-string">"targetId"</span> ], <span class="hljs-string">overlays:</span> [...],  <span class="hljs-string">detachable:</span> <span class="hljs-literal">true</span>,  <span class="hljs-string">reattach:</span> <span class="hljs-literal">true</span>, <span class="hljs-string">editable:</span> <span class="hljs-literal">true</span>});
+</div></code></pre>
+
+<ol start="2"><li rel="2">通过jsPlumb.addEndpoint(…)创建Endpoint添加到元素上</li>
+</ol>
+
+<pre class="prettyprint hljs-dark"><code class="hljs groovy"><div class="hljs-line"><span class="hljs-comment">//Endpoint的配置参数，尽可能多的列出了以下这些：</span>
+</div><div class="hljs-line"><span class="hljs-comment">//需要区别的是，此处是针对Endpoint点的定义设置，在全局配置中也有一些同名的属性，在那里是针对线的样式设置。</span>
+</div><div class="hljs-line">var endpoint = {
+</div><div class="hljs-line"><span class="hljs-symbol">     endpoint:</span> <span class="hljs-string">"Dot"</span>,  <span class="hljs-comment">//四种类型Dot，Rectangle，Image，Blank </span>
+</div><div class="hljs-line"><span class="hljs-symbol">     anchor:</span> [<span class="hljs-number">0.5</span>, <span class="hljs-number">0.5</span>, <span class="hljs-number">0</span>, <span class="hljs-number">-1</span>],  <span class="hljs-comment">//锚点位置</span>
+</div><div class="hljs-line"><span class="hljs-symbol">     paintStyle:</span> { <span class="hljs-string">fill:</span> <span class="hljs-string">"#7AB02C"</span>, <span class="hljs-string">radius:</span> <span class="hljs-number">5</span> },  <span class="hljs-comment">//点的样式</span>
+</div><div class="hljs-line"><span class="hljs-symbol">     hoverPaintStyle:</span> { <span class="hljs-string">fill:</span> <span class="hljs-string">"#216477"</span>, <span class="hljs-string">stroke:</span> <span class="hljs-string">"#216477"</span> }, <span class="hljs-comment">//点hover时的样式</span>
+</div><div class="hljs-line"><span class="hljs-symbol">     connector:</span> [ <span class="hljs-string">"Flowchart"</span>, { <span class="hljs-string">stub:</span> [<span class="hljs-number">40</span>, <span class="hljs-number">60</span>], <span class="hljs-string">gap:</span> <span class="hljs-number">10</span>, <span class="hljs-string">cornerRadius:</span> <span class="hljs-number">5</span>, <span class="hljs-string">alwaysRespectStubs:</span> <span class="hljs-literal">true</span>, <span class="hljs-string">midpoint:</span> <span class="hljs-number">0.3</span> } ],  <span class="hljs-comment">//连线设置</span>
+</div><div class="hljs-line"><span class="hljs-symbol">     connectorStyle:</span> { <span class="hljs-string">strokeWidth:</span> <span class="hljs-number">7</span>, <span class="hljs-string">stroke:</span> <span class="hljs-string">"rgba(198,89,30,0.7)"</span> },  <span class="hljs-comment">//连线样式</span>
+</div><div class="hljs-line"><span class="hljs-symbol">     connectorHoverStyle:</span> {},  <span class="hljs-comment">//连线hover时样式</span>
+</div><div class="hljs-line"><span class="hljs-symbol">     endpointsOnTop:</span> <span class="hljs-literal">true</span>,
+</div><div class="hljs-line"><span class="hljs-symbol">     isSource:</span> <span class="hljs-literal">true</span>,  <span class="hljs-comment">//是否为源端点</span>
+</div><div class="hljs-line"><span class="hljs-symbol">     maxConnections:</span> <span class="hljs-number">10</span>,  <span class="hljs-comment">//最大连接数，若为-1则不限制连接数</span>
+</div><div class="hljs-line"><span class="hljs-symbol">     isTarget:</span> <span class="hljs-literal">true</span>,  <span class="hljs-comment">//是否为目标端点</span>
+</div><div class="hljs-line"><span class="hljs-symbol">     dragOptions:</span> {}
+</div><div class="hljs-line"><span class="hljs-symbol">     dropOptions:</span> { <span class="hljs-string">tolerance:</span> <span class="hljs-string">"touch"</span>, <span class="hljs-string">hoverClass:</span> <span class="hljs-string">"className"</span> }, <span class="hljs-comment">//从source拖出时 target点的样式</span>
+</div><div class="hljs-line"><span class="hljs-symbol">     overlays:</span> [
+</div><div class="hljs-line">         [ <span class="hljs-string">"Label"</span>, {
+</div><div class="hljs-line"><span class="hljs-symbol">                location:</span> [<span class="hljs-number">0.5</span>, <span class="hljs-number">1.5</span>],
+</div><div class="hljs-line"><span class="hljs-symbol">                label:</span> <span class="hljs-string">"Drag"</span>,
+</div><div class="hljs-line"><span class="hljs-symbol">                cssClass:</span> <span class="hljs-string">"className"</span>, 
+</div><div class="hljs-line"><span class="hljs-symbol">                visible:</span> <span class="hljs-literal">false</span>
+</div><div class="hljs-line">            } 
+</div><div class="hljs-line">         ]    
+</div><div class="hljs-line">};
+</div><div class="hljs-line">var e1 = instance.addEndpoint( <span class="hljs-string">"elId1"</span>, endpoint );
+</div><div class="hljs-line">var e2 = instance.addEndpoint( <span class="hljs-string">"elId2"</span>, endpoint );
+</div><div class="hljs-line">instance.connect({ <span class="hljs-string">source:</span> e1, <span class="hljs-string">target:</span> e2 });
+</div></code></pre>
+
+<ol start="3"><li rel="3">当对元素设置过jsPlumb.makeSource(…)时，从元素拖拽出连线时就会创建并分配Endpoint。</li>
+</ol>
+
+<pre class="prettyprint hljs-dark"><code class="hljs ebnf"><div class="hljs-line"><span class="hljs-attribute">a</span>
+</div></code></pre>
+
+<h4 id="connector">Connector</h4>
+
+<p>连线。两个页面元素直接的连线，有四种类型，贝塞尔曲线(Bezier)、直线(Straight)、流程图(Flowchart)、状态器(StateMachine)，其中后两种类型支持连线的首末端都在一个元素上，形成回路。</p>
+
+<h4 id="overlay">Overlay</h4>
+
+<p>叠加。连线上的装饰的组件，例如箭头(Arrow)、标签(Label)等等。具体参数前面的例子中有，详见官网。</p>
+
+<h4 id="group">Group</h4>
+
+<p>分组</p></div></body></html>
